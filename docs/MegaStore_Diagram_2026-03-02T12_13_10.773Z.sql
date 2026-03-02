@@ -1,0 +1,83 @@
+
+CREATE TABLE IF NOT EXISTS "category" (
+	"id" SERIAL NOT NULL UNIQUE,
+	"name" VARCHAR(30) NOT NULL UNIQUE,
+	PRIMARY KEY("id")
+);
+
+CREATE TABLE IF NOT EXISTS "customer" (
+	"id" SERIAL NOT NULL UNIQUE,
+	"name" VARCHAR(50) NOT NULL,
+	"email" VARCHAR(50) NOT NULL UNIQUE,
+	"address" VARCHAR(50) NOT NULL,
+	"phone" VARCHAR(15) NOT NULL,
+	PRIMARY KEY("id")
+);
+
+
+CREATE TABLE IF NOT EXISTS "suplier" (
+	"id" SERIAL NOT NULL UNIQUE,
+	"name" VARCHAR(50) NOT NULL UNIQUE,
+	"email" VARCHAR(50) NOT NULL UNIQUE,
+	PRIMARY KEY("id")
+);
+
+CREATE TABLE IF NOT EXISTS "transaction" (
+	"id" VARCHAR(20) NOT NULL UNIQUE,
+	"date" DATE NOT NULL,
+	"quantity" DECIMAL(10,1) NOT NULL,
+	"total_line_value" DECIMAL(10,1) NOT NULL,
+	"customer_id" INTEGER NOT NULL,
+	PRIMARY KEY("id")
+);
+
+
+
+CREATE TABLE IF NOT EXISTS "product" (
+	"sku" VARCHAR(25) NOT NULL UNIQUE,
+	"category_id" INTEGER NOT NULL,
+	"name" VARCHAR(100) NOT NULL UNIQUE,
+	"unit_price" DECIMAL(10,1) NOT NULL,
+	PRIMARY KEY("sku")
+);
+
+
+
+CREATE TABLE IF NOT EXISTS "transaction_product" (
+	"id_transaction" VARCHAR(20) NOT NULL UNIQUE,
+	"sku_product" VARCHAR(25) NOT NULL
+);
+--
+
+
+
+
+
+
+
+
+CREATE TABLE IF NOT EXISTS "product_suplier" (
+	"sku_product" VARCHAR(25) NOT NULL UNIQUE,
+	"id_suplier" INTEGER NOT NULL
+);
+
+
+
+ALTER TABLE "transaction"
+ADD FOREIGN KEY("customer_id") REFERENCES "customer"("id")
+ON UPDATE NO ACTION ON DELETE NO ACTION;
+ALTER TABLE "product"
+ADD FOREIGN KEY("category_id") REFERENCES "category"("id")
+ON UPDATE NO ACTION ON DELETE NO ACTION;
+ALTER TABLE "transaction_product"
+ADD FOREIGN KEY("id_transaction") REFERENCES "transaction"("id")
+ON UPDATE NO ACTION ON DELETE NO ACTION;
+ALTER TABLE "transaction_product"
+ADD FOREIGN KEY("sku_product") REFERENCES "product"("sku")
+ON UPDATE NO ACTION ON DELETE NO ACTION;
+ALTER TABLE "product_suplier"
+ADD FOREIGN KEY("sku_product") REFERENCES "product"("sku")
+ON UPDATE NO ACTION ON DELETE NO ACTION;
+ALTER TABLE "product_suplier"
+ADD FOREIGN KEY("id_suplier") REFERENCES "suplier"("id")
+ON UPDATE NO ACTION ON DELETE NO ACTION;

@@ -10,6 +10,9 @@ saber el stock real en tiempo real.
 Solución con base de datos postgresql para base de datos relacional y poder solucionar redundancia de datos
 Junto con una base de datos no relacional (MongoDB) para el manejo de log de auditorias
 
+
+PREREQUISITOS:
+--
 Agregar un archivo .env con la sigieunte configuracion
 PORT=3000
 POSTGRES_URI="postgresql://<USER>:<PASSWORD>@localhost:<PORT>/<DB_NAME>"
@@ -21,3 +24,6 @@ Reemplazando:
 <PORT> ->por tu puerto de servidor
 <DB_NAME> -> por el nombre de la base de datos
 <RUTA_DEL_DATA_CSV> -> por la ruta del archivo .CSV
+
+Validar que se tenga creada las base de datos `db_megastore_exam` antes de ejecutar el programa, para que las tablas se creen correctamente
+
