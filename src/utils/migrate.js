@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS "suplier" (
 CREATE TABLE IF NOT EXISTS "transaction" (
 	"id" VARCHAR(20) NOT NULL UNIQUE,
 	"date" DATE NOT NULL,
-	"quantity" DECIMAL(10,1) NOT NULL,
+	"quantity" INTEGER NOT NULL,
 	"total_line_value" DECIMAL(10,1) NOT NULL,
 	"customer_id" INTEGER NOT NULL,
 	PRIMARY KEY("id"),
@@ -71,13 +71,28 @@ CREATE TABLE IF NOT EXISTS "transaction" (
         //create table transaction_product
         await client.query(`
             CREATE TABLE IF NOT EXISTS "transaction_product" (
-	"id_transaction" VARCHAR(20) NOT NULL UNIQUE,
+	"id_transaction" VARCHAR(20) NOT NULL,
 	"sku_product" VARCHAR(25) NOT NULL,
     CONSTRAINT fk_transaction_product_id_transaction_transaction FOREIGN KEY ("id_transaction")
         REFERENCES "transaction"("id")
         ON UPDATE NO ACTION ON DELETE NO ACTION,
     CONSTRAINT fk_transaction_product_sku_product_product FOREIGN KEY ("sku_product")
         REFERENCES "product"("sku")
+        ON UPDATE NO ACTION ON DELETE NO ACTION
+);
+            `)
+
+
+        //create table product_suplier
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS "product_suplier" (
+	"sku_product" VARCHAR(25) NOT NULL,
+	"id_suplier" INTEGER NOT NULL,
+    CONSTRAINT fk_product_suplier_sku_product_product FOREIGN KEY ("sku_product")
+        REFERENCES "product"("sku")
+        ON UPDATE NO ACTION ON DELETE NO ACTION,
+    CONSTRAINT fk_product_suplier_id_suplier_suplier FOREIGN KEY ("id_suplier")
+        REFERENCES "suplier"("id")
         ON UPDATE NO ACTION ON DELETE NO ACTION
 );
             `)
@@ -94,6 +109,107 @@ CREATE TABLE IF NOT EXISTS "transaction" (
     }
 }
 
+async function insertDataFromCSV() {
+    const client = await pool.connect()
+    try {
+        await client.query('BEGIN')
+        const result = [];
+        await new Promise((resolve, reject) => {
+            fs.createReadStream(env.fileDataCsv)
+                .pipe(csv())
+                .on("data", (data) => result.push(data))
+                .on("end", resolve)
+                .on("error", reject);
+        });
+        const counters = {
+            contCategories: 0,
+            contCustomers: 0,
+            contTransactions: 0,
+            contProducts: 0,
+            contSupliers: 0
+        }
+        let lengthTransactionProductExist = 0
+        let lengthProductSuplierExist = 0
+        for (const row of result) {
 
 
-export { queryTables }
+            const category_result = await client.query(`
+                INSERT INTO "category" ("name") VALUES ($1) ON CONFLICT ("name")
+                DO UPDATE SET 
+                    name = EXCLUDED.name
+                returning xmax, id
+                `, [row.product_category])
+
+
+            const customer_result = await client.query(`
+                INSERT INTO "customer" ("name","email","address","phone") VALUES ($1,$2,$3,$4) ON CONFLICT ("email")
+                DO UPDATE SET 
+                    email = EXCLUDED.email
+                returning xmax, id
+                `, [row.customer_name, row.customer_email, row.customer_address, row.customer_phone])
+
+            const suplier_result = await client.query(`
+                INSERT INTO "suplier" ("name","email") VALUES ($1,$2) ON CONFLICT ("email")
+                DO UPDATE SET 
+                    email = EXCLUDED.email
+                returning xmax,id
+                `, [row.supplier_name, row.supplier_email])
+
+            //const total_line_value= await client.query('Select () FROM transaction')
+
+            const transaction_result = await client.query(`
+                INSERT INTO "transaction" ("id","date","quantity","total_line_value","customer_id") VALUES ($1,$2,$3,$4,$5) ON CONFLICT ("id")
+                DO UPDATE SET 
+                    id = EXCLUDED.id
+                returning xmax,id
+                `, [row.transaction_id, row.date, row.quantity, row.total_line_value, customer_result.rows[0].id])
+
+
+            const product_result = await client.query(`
+                INSERT INTO "product" ("sku","category_id","name","unit_price") VALUES ($1,$2,$3,$4) ON CONFLICT ("sku")
+                DO UPDATE SET 
+                    sku = EXCLUDED.sku
+                returning xmax, sku
+                `, [row.product_sku, category_result.rows[0].id, row.product_name, row.unit_price])
+
+            do {
+                const transaction_productExist = await client.query("select * from transaction_product tp where tp.id_transaction = $1 and tp.sku_product = $2", [transaction_result.rows[0].id, product_result.rows[0].sku])
+                lengthTransactionProductExist = transaction_productExist.rows.length
+            } while (lengthTransactionProductExist < 0);
+            if (lengthTransactionProductExist == 0) {
+                await client.query(`
+                 INSERT INTO "transaction_product" ("id_transaction","sku_product") VALUES ($1,$2)
+                 `, [transaction_result.rows[0].id, product_result.rows[0].sku])
+            }
+
+            do {
+                const product_suplierExist = await client.query("select * from product_suplier ps where ps.sku_product = $1 and ps.id_suplier = $2", [product_result.rows[0].sku, suplier_result.rows[0].id])
+                lengthProductSuplierExist = product_suplierExist.rows.length
+            } while (lengthProductSuplierExist < 0);
+            if (lengthProductSuplierExist == 0) {
+                await client.query(`
+             INSERT INTO "product_suplier" ("sku_product","id_suplier") VALUES ($1,$2)
+             `, [product_result.rows[0].sku, suplier_result.rows[0].id])
+            }
+
+
+            if (category_result.rows[0].xmax === '0') counters.contCategories++;
+            if (customer_result.rows[0].xmax === '0') counters.contCustomers++;
+            if (suplier_result.rows[0].xmax === '0') counters.contSupliers++;
+            if (transaction_result.rows[0].xmax === '0') counters.contTransactions++;
+            if (product_result.rows[0].xmax === '0') counters.contProducts++;
+        }//end for
+
+
+        await client.query('COMMIT')
+        return counters
+    } catch (error) {
+        console.log(error);
+
+        await client.query('ROLLBACK')
+    } finally {
+        client.release()
+    }
+}
+
+export { queryTables, insertDataFromCSV }

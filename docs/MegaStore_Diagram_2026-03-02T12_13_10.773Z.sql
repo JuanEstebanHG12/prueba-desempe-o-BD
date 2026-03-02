@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS "suplier" (
 CREATE TABLE IF NOT EXISTS "transaction" (
 	"id" VARCHAR(20) NOT NULL UNIQUE,
 	"date" DATE NOT NULL,
-	"quantity" DECIMAL(10,1) NOT NULL,
+	"quantity" INTEGER NOT NULL,
 	"total_line_value" DECIMAL(10,1) NOT NULL,
 	"customer_id" INTEGER NOT NULL,
 	PRIMARY KEY("id")
@@ -44,22 +44,15 @@ CREATE TABLE IF NOT EXISTS "product" (
 
 
 CREATE TABLE IF NOT EXISTS "transaction_product" (
-	"id_transaction" VARCHAR(20) NOT NULL UNIQUE,
+	"id_transaction" VARCHAR(20) NOT NULL,
 	"sku_product" VARCHAR(25) NOT NULL
 );
---
-
-
-
-
-
-
-
 
 CREATE TABLE IF NOT EXISTS "product_suplier" (
-	"sku_product" VARCHAR(25) NOT NULL UNIQUE,
+	"sku_product" VARCHAR(25) NOT NULL,
 	"id_suplier" INTEGER NOT NULL
 );
+--
 
 
 
