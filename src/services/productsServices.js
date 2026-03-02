@@ -11,7 +11,9 @@ join "transaction" t on tp.id_transaction = t.id
 group by p."name"
 order by income desc `)
     } catch (error) {
-
+        console.log(error);
+    }finally{
+        client.release()
     }
 }
 
