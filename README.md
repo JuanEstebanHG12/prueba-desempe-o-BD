@@ -14,10 +14,12 @@ Junto con una base de datos no relacional (MongoDB) para el manejo de log de aud
 PREREQUISITOS:
 --
 Agregar un archivo .env con la sigieunte configuracion
+```
 PORT=3000
 POSTGRES_URI="postgresql://<USER>:<PASSWORD>@localhost:<PORT>/<DB_NAME>"
 MONGO_URI="mongodb://localhost:<PORT>/<DB_NAME>"
 FILE_DATA_CSV=<RUTA_DEL_DATA_CSV>
+```
 Reemplazando:
 <USER> -> por tu usuario de postgres
 <PASSWORD> -> por tu contraseña de postgres
@@ -27,3 +29,5 @@ Reemplazando:
 
 Validar que se tenga creada las base de datos `db_megastore_exam` antes de ejecutar el programa, para que las tablas se creen correctamente
 
+
+>Ejecutar `npm run dev` para levantar el servidor

@@ -5,7 +5,6 @@ import { createTables, migrateDataFromCSV } from "./services/migrateServices.js"
 try {
     console.log('Conecting to PostgresSQL...');
     await createTables()
-    await migrateDataFromCSV()
     app.listen(env.port, () => {
         console.log(`server running on port ${env.port}`);
     })
