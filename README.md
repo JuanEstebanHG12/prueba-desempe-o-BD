@@ -1,41 +1,47 @@
-# prueba-desempe-o-BD MegaStore Global
+#Database-Performance-Test MegaStore Global
 
-"MegaStore Global", enfrenta
-una crisis operativa. Durante años, han manejado todo su inventario, ventas, proveedores
-y clientes en un único archivo maestro de Excel.
-El volumen de datos ha crecido tanto que el archivo es inmanejable: hay inconsistencias
-en los precios, direcciones de clientes duplicadas con errores ortográficos y es imposible
-saber el stock real en tiempo real.
+MegaStore Global is facing an operational crisis. For years, they have managed all their inventory, sales, suppliers, and customers in a single Excel master file. The volume of data has grown so much that the file is unmanageable: there are price inconsistencies, duplicate customer addresses with spelling errors, and it's impossible to know the actual stock levels in real time.
 
-Solución con base de datos postgresql para base de datos relacional y poder solucionar redundancia de datos
-Junto con una base de datos no relacional (MongoDB) para el manejo de log de auditorias
+PostgreSQL database solution for relational databases to address data redundancy
+Along with a non-relational database (MongoDB) for audit log management
 
-
-PREREQUISITOS:
---
-- Tener node.js con npm instalado
-- Ejecutar `npm install`
-- Agregar un archivo .env con la sigieunte configuracion
+PRE-REQUIREMENTS:
+-- Have Node.js with npm installed
+- Run `npm install`
+- Add an .env file with the following configuration:
 ```
 PORT=3000
-POSTGRES_URI="postgresql://<USER>:<PASSWORD>@localhost:<PORT>/<DB_NAME>"
-MONGO_URI="mongodb://localhost:<PORT>/<DB_NAME>"
-FILE_DATA_CSV=<RUTA_DEL_DATA_CSV>
+POSTGRES_URI="postgresql://<USERNAME>:<PASSWORD>@localhost:<PORT>/<DATABASE_NAME>"
+MONGO_URI="mongodb://localhost:<PORT>/<DATABASE_NAME>"
+FILE_DATA_CSV=<CSSV_DATA_PATH>
 ```
-Reemplazando:
-<USER> -> por tu usuario de postgres
-<PASSWORD> -> por tu contraseña de postgres
-<PORT> ->por tu puerto de servidor
-<DB_NAME> -> por el nombre de la base de datos
-<RUTA_DEL_DATA_CSV> -> por la ruta del archivo .CSV
+Replacing:
+- `<USERNAME>` -> with your PostgreSQL username
+- `<PASSWORD>` -> with your MongoDB password Postgres
+- `<PORT>` -> Your server port
+- `<DB_NAME>` -> The database name
+- `<PATH_TO_CSV_DATA>` -> The path to the .CSV file
 
-Validar que se tenga creada las base de datos `db_megastore_exam` antes de ejecutar el programa, para que las tablas se creen correctamente
+- Verify that the `db_megastore_exam` database exists before running the program, so that the tables are created correctly.
 
+> Run `npm run dev` to start the server.
 
->Ejecutar `npm run dev` para levantar el servidor
+# Using the endpoints
+To use the endpoints and start consuming the data, we need Cartero.
+Once in Cartero, we can create new requests to use the following endpoints:
 
-# Usar los endponts
-Para el uso de los endpoint y empezar a consumir los datos, necesitamos de postman
-una vez en postman podemos crear nuevas peticiones para usar los siquientes endpoint
-- post -> http://localhost:3000/api/mega-store/migrate -> endpoint para migrar la data de un csv
-- get -> http://localhost:3000/api/mega-store/products/most-selling -> enpoint que lista los productos más vendidos 
+### Migrate endpoint
+- POST -> http://localhost:3000/api/mega-store/migrate -> Endpoint to migrate data from a CSV file
+
+### Products endpoints
+- GET -> http://localhost:3000/api/mega-store/products/most-selling -> Indicates that it lists the best-selling products
+
+### Categories endpoints
+- GET -> http://localhost:3000/api/mega-store/categories/ -> Get all categories
+- POST -> http://localhost:3000/api/mega-store/categories/create-category -> Create a new category
+- PUT -> http://localhost:3000/api/mega-store/categories/update-category/1 -> Update an existing category
+
+> The Postman collection, used to run the endpoints, is located in this repository in the docs folder.
+
+# Author
+> Juan Esteban Holguin Galeano
