@@ -13,7 +13,9 @@ Junto con una base de datos no relacional (MongoDB) para el manejo de log de aud
 
 PREREQUISITOS:
 --
-Agregar un archivo .env con la sigieunte configuracion
+- Tener node.js con npm instalado
+- Ejecutar `npm install`
+- Agregar un archivo .env con la sigieunte configuracion
 ```
 PORT=3000
 POSTGRES_URI="postgresql://<USER>:<PASSWORD>@localhost:<PORT>/<DB_NAME>"
@@ -31,3 +33,9 @@ Validar que se tenga creada las base de datos `db_megastore_exam` antes de ejecu
 
 
 >Ejecutar `npm run dev` para levantar el servidor
+
+# Usar los endponts
+Para el uso de los endpoint y empezar a consumir los datos, necesitamos de postman
+una vez en postman podemos crear nuevas peticiones para usar los siquientes endpoint
+- post -> http://localhost:3000/api/mega-store/migrate -> endpoint para migrar la data de un csv
+- get -> http://localhost:3000/api/mega-store/products/most-selling -> enpoint que lista los productos más vendidos 

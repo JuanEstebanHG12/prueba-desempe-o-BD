@@ -2,6 +2,7 @@ import { pool } from "../config/postgres.js"
 import fs from 'fs';
 import csv from 'csv-parser';
 import { env } from "../config/env.js";
+import { AuditLogs } from "../models/auditLogs.js";
 
 async function queryTables() {
     const client = await pool.connect()
@@ -132,7 +133,7 @@ async function insertDataFromCSV() {
         let lengthProductSuplierExist = 0
         for (const row of result) {
 
-
+/* ==============================================CATEGORIES========================== */
             const category_result = await client.query(`
                 INSERT INTO "category" ("name") VALUES ($1) ON CONFLICT ("name")
                 DO UPDATE SET 
@@ -141,12 +142,62 @@ async function insertDataFromCSV() {
                 `, [row.product_category])
 
 
+                const category_mongo = {
+                query: `INSERT INTO "category" ("name") VALUES ($1) ON CONFLICT ("name")
+                            DO UPDATE SET 
+                                name = EXCLUDED.name
+                            returning xmax, id`,
+                date: Date.now(),
+                operation: category_result.command
+            }
+            await AuditLogs.findOneAndUpdate(
+                { "table": "category" },
+                {
+                    $setOnInsert: {
+                        "table": "category",
+                    },
+                    $push: {
+                        "history": category_mongo
+                    }
+
+
+                },
+                { upsert: true }
+            )
+/* =======================================CUSTOMERS========================================= */
             const customer_result = await client.query(`
                 INSERT INTO "customer" ("name","email","address","phone") VALUES ($1,$2,$3,$4) ON CONFLICT ("email")
                 DO UPDATE SET 
                     email = EXCLUDED.email
                 returning xmax, id
                 `, [row.customer_name, row.customer_email, row.customer_address, row.customer_phone])
+
+
+                const customer_mongo = {
+                query: `INSERT INTO "customer" ("name","email","address","phone") VALUES ($1,$2,$3,$4) ON CONFLICT ("email")
+                DO UPDATE SET 
+                    email = EXCLUDED.email
+                returning xmax, id`,
+                date: Date.now(),
+                operation: customer_result.command
+            }
+            await AuditLogs.findOneAndUpdate(
+                { "table": "customer" },
+                {
+                    $setOnInsert: {
+                        "table": "customer",
+                    },
+                    $push: {
+                        "history": customer_mongo
+                    }
+
+
+                },
+                { upsert: true }
+            )
+
+
+/* =========================================SUPLIER====================================== */
 
             const suplier_result = await client.query(`
                 INSERT INTO "suplier" ("name","email") VALUES ($1,$2) ON CONFLICT ("email")
@@ -155,8 +206,30 @@ async function insertDataFromCSV() {
                 returning xmax,id
                 `, [row.supplier_name, row.supplier_email])
 
-            //const total_line_value= await client.query('Select () FROM transaction')
+                   const suplier_mongo = {
+                query: `INSERT INTO "suplier" ("name","email") VALUES ($1,$2) ON CONFLICT ("email")
+                DO UPDATE SET 
+                    email = EXCLUDED.email
+                returning xmax,id`,
+                date: Date.now(),
+                operation: suplier_result.command
+            }
+            await AuditLogs.findOneAndUpdate(
+                { "table": "suplier" },
+                {
+                    $setOnInsert: {
+                        "table": "suplier",
+                    },
+                    $push: {
+                        "history": suplier_mongo
+                    }
 
+
+                },
+                { upsert: true }
+            )
+            
+/* ========================================TRANSACTION=========================== */
             const transaction_result = await client.query(`
                 INSERT INTO "transaction" ("id","date","quantity","total_line_value","customer_id") VALUES ($1,$2,$3,$4,$5) ON CONFLICT ("id")
                 DO UPDATE SET 
@@ -164,13 +237,61 @@ async function insertDataFromCSV() {
                 returning xmax,id
                 `, [row.transaction_id, row.date, row.quantity, row.total_line_value, customer_result.rows[0].id])
 
+                  const transaction_mongo = {
+                query: `INSERT INTO "transaction" ("id","date","quantity","total_line_value","customer_id") VALUES ($1,$2,$3,$4,$5) ON CONFLICT ("id")
+                DO UPDATE SET 
+                    id = EXCLUDED.id
+                returning xmax,id`,
+                date: Date.now(),
+                operation: transaction_result.command
+            }
+            await AuditLogs.findOneAndUpdate(
+                { "table": "transaction" },
+                {
+                    $setOnInsert: {
+                        "table": "transaction",
+                    },
+                    $push: {
+                        "history": transaction_mongo
+                    }
 
+
+                },
+                { upsert: true }
+            )
+
+/* =======================PRODUCTS========================== */
             const product_result = await client.query(`
                 INSERT INTO "product" ("sku","category_id","name","unit_price") VALUES ($1,$2,$3,$4) ON CONFLICT ("sku")
                 DO UPDATE SET 
                     sku = EXCLUDED.sku
                 returning xmax, sku
                 `, [row.product_sku, category_result.rows[0].id, row.product_name, row.unit_price])
+
+                       const product_mongo = {
+                query: `INSERT INTO "product" ("sku","category_id","name","unit_price") VALUES ($1,$2,$3,$4) ON CONFLICT ("sku")
+                DO UPDATE SET 
+                    sku = EXCLUDED.sku
+                returning xmax, sku`,
+                date: Date.now(),
+                operation: product_result.command
+            }
+            await AuditLogs.findOneAndUpdate(
+                { "table": "product" },
+                {
+                    $setOnInsert: {
+                        "table": "product",
+                    },
+                    $push: {
+                        "history": product_mongo
+                    }
+
+
+                },
+                { upsert: true }
+            )
+
+
 
             do {
                 const transaction_productExist = await client.query("select * from transaction_product tp where tp.id_transaction = $1 and tp.sku_product = $2", [transaction_result.rows[0].id, product_result.rows[0].sku])
@@ -198,6 +319,8 @@ async function insertDataFromCSV() {
             if (suplier_result.rows[0].xmax === '0') counters.contSupliers++;
             if (transaction_result.rows[0].xmax === '0') counters.contTransactions++;
             if (product_result.rows[0].xmax === '0') counters.contProducts++;
+
+
         }//end for
 
 
