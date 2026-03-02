@@ -1,4 +1,4 @@
-#Database-Performance-Test MegaStore Global
+# Database-Performance-Test MegaStore Global
 
 MegaStore Global is facing an operational crisis. For years, they have managed all their inventory, sales, suppliers, and customers in a single Excel master file. The volume of data has grown so much that the file is unmanageable: there are price inconsistencies, duplicate customer addresses with spelling errors, and it's impossible to know the actual stock levels in real time.
 
